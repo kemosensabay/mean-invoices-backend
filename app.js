@@ -23,17 +23,30 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 // app.use(express.static(path.join(__dirname, "public")));
-// app.use(express.static(path.join(__dirname, "public/dist/")));
-app.use("/images", express.static(path.join(__dirname, "_images")));
-app.use(cors());
+// app.use("/images", express.static(path.join(__dirname, "_images")));
+
+// Serve UI as static files
+app.use("/", express.static(path.join(__dirname, "public/dist/")));
+
+// CORS not needed if UI is integrated
+// app.use(cors());
 
 // Connect Database
 require("./_startup/db")();
 
-app.use("/", indexRouter);
+// Enable Production mode
+require("./_startup/production")(app);
+
+// Server calls
 app.use("/invoices", invoicesRouter);
 
-app.use("**", catchAllRouter);
+// All other calls via Angular UI
+app.use((req, res, next) => {
+  res.sendFile(path.join(__dirname, "public/dist/", "index.html"));
+});
+
+// app.use("/", indexRouter);
+// app.use("**", catchAllRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
